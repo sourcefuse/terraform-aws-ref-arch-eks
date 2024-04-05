@@ -1,17 +1,17 @@
-output "eks_cluster_security_group_id" {
-  description = "ID of the EKS cluster Security Group"
-  value       = module.eks_cluster.security_group_id
-}
+# output "eks_cluster_security_group_id" {
+#   description = "ID of the EKS cluster Security Group"
+#   value       = module.eks_cluster.security_group_id
+# }
 
-output "eks_cluster_security_group_arn" {
-  description = "ARN of the EKS cluster Security Group"
-  value       = module.eks_cluster.security_group_arn
-}
+# output "eks_cluster_security_group_arn" {
+#   description = "ARN of the EKS cluster Security Group"
+#   value       = module.eks_cluster.security_group_arn
+# }
 
-output "eks_cluster_security_group_name" {
-  description = "Name of the EKS cluster Security Group"
-  value       = module.eks_cluster.security_group_name
-}
+# output "eks_cluster_security_group_name" {
+#   description = "Name of the EKS cluster Security Group"
+#   value       = module.eks_cluster.security_group_name
+# }
 
 output "eks_cluster_id" {
   description = "The name of the cluster"

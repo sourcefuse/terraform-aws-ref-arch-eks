@@ -14,26 +14,27 @@ module "tags" {
 }
 
 module "eks_cluster" {
-  source                    = "sourcefuse/arc-eks/aws"
-  version                   = "5.0.5"
-  environment               = var.environment
-  name                      = var.name
-  namespace                 = var.namespace
-  desired_size              = var.desired_size
-  instance_types            = var.instance_types
-  kubernetes_namespace      = var.kubernetes_namespace
-  create_node_group         = true
-  max_size                  = var.max_size
-  min_size                  = var.min_size
-  subnet_ids                = data.aws_subnets.private.ids
-  region                    = var.region
-  vpc_id                    = data.aws_vpc.vpc.id
-  enabled                   = true
-  kubernetes_version        = var.kubernetes_version
-  apply_config_map_aws_auth = true
-  kube_data_auth_enabled    = true
-  kube_exec_auth_enabled    = true
-  #  csi_driver_enabled        = var.csi_driver_enabled
-  map_additional_iam_roles = var.map_additional_iam_roles
-  allowed_security_groups  = concat(data.aws_security_groups.eks_sg.ids, data.aws_security_groups.db_sg.ids)
+  source = "../"
+  # version              = "5.0.5"
+  environment          = var.environment
+  name                 = var.name
+  namespace            = var.namespace
+  desired_size         = var.desired_size
+  instance_types       = var.instance_types
+  kubernetes_namespace = var.kubernetes_namespace
+  create_node_group    = true
+  max_size             = var.max_size
+  min_size             = var.min_size
+  subnet_ids           = data.aws_subnets.private.ids
+  region               = var.region
+
+  enabled            = true
+  kubernetes_version = var.kubernetes_version
+  access_entry_map   = local.access_entry_map
+  access_config = {
+    authentication_mode                         = "API"
+    bootstrap_cluster_creator_admin_permissions = false
+  }
+  map_additional_iam_roles   = var.map_additional_iam_roles
+  allowed_security_group_ids = concat(data.aws_security_groups.eks_sg.ids, data.aws_security_groups.db_sg.ids)
 }

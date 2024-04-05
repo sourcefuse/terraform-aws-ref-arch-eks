@@ -38,25 +38,16 @@ variable "cluster_log_retention_period" {
 # }
 
 ## iam
-variable "map_additional_iam_roles" {
-  type = list(object({
-    rolearn  = string
-    username = string
-    groups   = list(string)
-  }))
-  description = "Additional IAM roles to add to `config-map-aws-auth` ConfigMap"
-  default     = []
-}
 
-variable "map_additional_iam_users" {
-  type = list(object({
-    userarn  = string
-    username = string
-    groups   = list(string)
-  }))
-  description = "Additional IAM users to add to `config-map-aws-auth` ConfigMap"
-  default     = []
-}
+# variable "map_additional_iam_users" {
+#   type = list(object({
+#     userarn  = string
+#     username = string
+#     groups   = list(string)
+#   }))
+#   description = "Additional IAM users to add to `config-map-aws-auth` ConfigMap"
+#   default     = []
+# }
 
 variable "oidc_provider_enabled" {
   description = "Create an IAM OIDC identity provider for the cluster, then you can create IAM roles to associate with a service account in the cluster, instead of using `kiam` or `kube2iam`. For more information, see https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html"
@@ -77,11 +68,11 @@ variable "public_access_cidrs" {
 }
 
 ## workers
-variable "local_exec_interpreter" {
-  description = "shell to use for local_exec"
-  type        = list(string)
-  default     = ["/bin/sh", "-c"]
-}
+# variable "local_exec_interpreter" {
+#   description = "shell to use for local_exec"
+#   type        = list(string)
+#   default     = ["/bin/sh", "-c"]
+# }
 
 variable "instance_types" {
   description = "Set of instance types associated with the EKS Node Group. Defaults to [\"t3.medium\"]. Terraform will only perform drift detection if a configuration value is provided"
@@ -175,13 +166,61 @@ variable "kubernetes_namespace" {
   description = "Kubernetes namespace for selection"
 }
 
+variable "access_config" {
+  type = object({
+    authentication_mode                         = optional(string, "API")
+    bootstrap_cluster_creator_admin_permissions = optional(bool, false)
+  })
+  description = "Access configuration for the EKS cluster."
+  default     = {}
+  nullable    = false
+
+  validation {
+    condition     = !contains(["CONFIG_MAP"], var.access_config.authentication_mode)
+    error_message = "The CONFIG_MAP authentication_mode is not supported."
+  }
+}
+
+variable "access_entry_map" {
+  type = map(object({
+    # key is principal_arn
+    user_name = optional(string)
+    # Cannot assign "system:*" groups to IAM users, use ClusterAdmin and Admin instead
+    kubernetes_groups = optional(list(string), [])
+    type              = optional(string, "STANDARD")
+    access_policy_associations = optional(map(object({
+      # key is policy_arn or policy_name
+      access_scope = optional(object({
+        type       = optional(string, "cluster")
+        namespaces = optional(list(string))
+      }), {}) # access_scope
+    })), {})  # access_policy_associations
+  }))         # access_entry_map
+  description = <<-EOT
+    Map of IAM Principal ARNs to access configuration.
+    Preferred over other inputs as this configuration remains stable
+    when elements are added or removed, but it requires that the Principal ARNs
+    and Policy ARNs are known at plan time.
+    Can be used along with other `access_*` inputs, but do not duplicate entries.
+    Map `access_policy_associations` keys are policy ARNs, policy
+    full name (AmazonEKSViewPolicy), or short name (View).
+    It is recommended to use the default `user_name` because the default includes
+    IAM role or user name and the session name for assumed roles.
+    As a special case in support of backwards compatibility, membership in the
+    `system:masters` group is is translated to an association with the ClusterAdmin policy.
+    In all other cases, including any `system:*` group in `kubernetes_groups` is prohibited.
+    EOT
+  default     = {}
+  nullable    = false
+}
+
 #######################################################
 ## data lookups
 #######################################################
-variable "vpc_id" {
-  type        = string
-  description = "VPC ID"
-}
+# variable "vpc_id" {
+#   type        = string
+#   description = "VPC ID"
+# }
 
 variable "subnet_ids" {
   description = "Subnet IDs"
@@ -189,35 +228,37 @@ variable "subnet_ids" {
 }
 
 # auth variables
-variable "apply_config_map_aws_auth" {
-  type        = bool
-  default     = true
-  description = "Whether to apply the ConfigMap to allow worker nodes to join the EKS cluster and allow additional users, accounts and roles to acces the cluster"
-}
+# variable "apply_config_map_aws_auth" {
+#   type        = bool
+#   default     = true
+#   description = "Whether to apply the ConfigMap to allow worker nodes to join the EKS cluster and allow additional users, accounts and roles to acces the cluster"
+# }
 
-variable "kube_data_auth_enabled" {
-  type        = bool
-  default     = true
-  description = <<-EOT
-    If `true`, use an `aws_eks_cluster_auth` data source to authenticate to the EKS cluster.
-    Disabled by `kubeconfig_path_enabled` or `kube_exec_auth_enabled`.
-    EOT
-}
+# variable "kube_data_auth_enabled" {
+#   type        = bool
+#   default     = true
+#   description = <<-EOT
+#     If `true`, use an `aws_eks_cluster_auth` data source to authenticate to the EKS cluster.
+#     Disabled by `kubeconfig_path_enabled` or `kube_exec_auth_enabled`.
+#     EOT
+# }
 
 
-variable "kube_exec_auth_enabled" {
-  type        = bool
-  default     = false
-  description = <<-EOT
-    If `true`, use the Kubernetes provider `exec` feature to execute `aws eks get-token` to authenticate to the EKS cluster.
-    Disabled by `kubeconfig_path_enabled`, overrides `kube_data_auth_enabled`.
-    EOT
-}
+# variable "kube_exec_auth_enabled" {
+#   type        = bool
+#   default     = false
+#   description = <<-EOT
+#     If `true`, use the Kubernetes provider `exec` feature to execute `aws eks get-token` to authenticate to the EKS cluster.
+#     Disabled by `kubeconfig_path_enabled`, overrides `kube_data_auth_enabled`.
+#     EOT
+# }
 
-variable "allowed_security_groups" {
+variable "allowed_security_group_ids" {
   type        = list(string)
   default     = []
-  description = "List of Security Group IDs to be allowed to connect to the EKS cluster"
+  description = <<-EOT
+    A list of IDs of Security Groups to allow access to the cluster.
+    EOT
 }
 
 variable "allowed_cidr_blocks" {

@@ -1,11 +1,4 @@
 locals {
-  map_additional_iam_roles = concat(var.map_additional_iam_roles, [
-    {
-      rolearn  = aws_iam_role.eks_admin.arn,
-      username = "eks-admin",
-      groups   = ["system:masters"]
-    }
-  ])
   admin_principal = var.admin_principal != null ? var.admin_principal : ["arn:aws:iam::${data.aws_caller_identity.source.account_id}:root"]
   #kubernetes_config_map_id = module.eks_cluster.kubernetes_config_map_id
 

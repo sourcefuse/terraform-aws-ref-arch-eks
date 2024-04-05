@@ -55,3 +55,10 @@ data "aws_eks_cluster" "eks" {
 data "aws_eks_cluster_auth" "eks" {
   name = module.eks_cluster.eks_cluster_id
 }
+
+data "aws_caller_identity" "source" {}
+
+#iam
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.source.arn
+}

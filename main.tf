@@ -1,14 +1,14 @@
 module "eks_cluster" {
   source  = "cloudposse/eks-cluster/aws"
-  version = "3.0.0"
+  version = "4.0.0"
 
-  allowed_security_groups      = var.allowed_security_groups
-  allowed_cidr_blocks          = var.allowed_cidr_blocks
-  region                       = var.region
-  vpc_id                       = var.vpc_id
-  subnet_ids                   = var.subnet_ids
-  kubernetes_version           = var.kubernetes_version
-  local_exec_interpreter       = var.local_exec_interpreter
+  allowed_security_group_ids = var.allowed_security_group_ids
+  allowed_cidr_blocks        = var.allowed_cidr_blocks
+  region                     = var.region
+  # vpc_id                       = var.vpc_id
+  subnet_ids         = var.subnet_ids
+  kubernetes_version = var.kubernetes_version
+  # local_exec_interpreter       = var.local_exec_interpreter
   oidc_provider_enabled        = var.oidc_provider_enabled
   public_access_cidrs          = var.public_access_cidrs
   enabled_cluster_log_types    = var.enabled_cluster_log_types
@@ -21,15 +21,19 @@ module "eks_cluster" {
   cluster_encryption_config_kms_key_policy                  = var.cluster_encryption_config_kms_key_policy
   cluster_encryption_config_resources                       = var.cluster_encryption_config_resources
 
-  map_additional_iam_roles = local.map_additional_iam_roles
-  map_additional_iam_users = var.map_additional_iam_users
+  # map_additional_iam_roles = local.map_additional_iam_roles
+  # map_additional_iam_users = var.map_additional_iam_users
 
-  addons = var.addons
+  addons            = var.addons
+  addons_depends_on = [module.eks_node_group]
 
-  apply_config_map_aws_auth                 = var.apply_config_map_aws_auth
-  kube_data_auth_enabled                    = var.kube_data_auth_enabled
-  kubernetes_config_map_ignore_role_changes = true
-  kube_exec_auth_enabled                    = var.kube_exec_auth_enabled
+  access_entry_map = var.access_entry_map
+  access_config    = var.access_config
+
+  # apply_config_map_aws_auth                 = var.apply_config_map_aws_auth
+  # kube_data_auth_enabled                    = var.kube_data_auth_enabled
+  # kubernetes_config_map_ignore_role_changes = true
+  # kube_exec_auth_enabled                    = var.kube_exec_auth_enabled
 
   context = module.this.context
   tags    = var.tags
@@ -97,7 +101,7 @@ module "eks_node_group" {
   launch_template_version    = var.launch_template_version
 
   # Prevent the node groups from being created before the Kubernetes aws-auth ConfigMap
-  module_depends_on = module.eks_cluster.kubernetes_config_map_id
+  # module_depends_on = module.eks_cluster.kubernetes_config_map_id
 
   context = module.this.context
 

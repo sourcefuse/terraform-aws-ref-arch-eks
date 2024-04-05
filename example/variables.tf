@@ -68,18 +68,6 @@ variable "cluster_log_retention_period" {
   default     = 0
 }
 
-variable "map_additional_iam_roles" {
-  description = "Additional IAM roles to add to `config-map-aws-auth` ConfigMap"
-
-  type = list(object({
-    rolearn  = string
-    username = string
-    groups   = list(string)
-  }))
-
-  default = []
-}
-
 variable "cluster_encryption_config_enabled" {
   description = "Set to `true` to enable Cluster Encryption Configuration"
   type        = bool

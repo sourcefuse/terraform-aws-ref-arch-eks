@@ -9,10 +9,10 @@
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | n/a |
-| <a name="provider_helm"></a> [helm](#provider\_helm) | n/a |
-| <a name="provider_kubernetes"></a> [kubernetes](#provider\_kubernetes) | n/a |
-| <a name="provider_time"></a> [time](#provider\_time) | n/a |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 5.44.0 |
+| <a name="provider_helm"></a> [helm](#provider\_helm) | 2.13.0 |
+| <a name="provider_kubernetes"></a> [kubernetes](#provider\_kubernetes) | 2.27.0 |
+| <a name="provider_time"></a> [time](#provider\_time) | 0.11.1 |
 
 ## Modules
 
